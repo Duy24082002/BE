@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:5050
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2U5MTEzM2Q0YTZiMjYxOGU1YWU3M2EiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwicm9sZXMiOlsidXNlciJdLCJpYXQiOjE3NDQwMTc4NTEsImV4cCI6MTc0NDEwNDI1MX0.DdnutLUB3SFZJjBrpeyZUZGTVbyYppKIoVFRX6lbeZg
+### Sign Up
+POST http://localhost:5050/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "ducduy@example.com",
+  "password": "Password123",
+  "firstname": "Trần",
+  "middlename": "Đức",
+  "lastname": "Duy"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ducduy@example.com",
+  "password": "Password123"
+}
+
+### Refresh Token
+POST http://localhost:3000/api/auth/refresh-token
+Content-Type: application/json
