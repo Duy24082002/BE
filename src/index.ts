@@ -9,6 +9,7 @@ import { Server, Socket } from "socket.io";
 // Load environment variables before other imports
 import { Server as Engine } from "engine.io";
 import { createServer } from "node:http";
+
 // const httpServer = createServer((req, res) => {
 //   res.writeHead(404).end();
 // });
@@ -22,6 +23,9 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5050;
 const server = require("http").createServer(app);
+// const mongoose = require("mongoose");
+const { EJSON, Int32, Double, ObjectId } = require("bson");
+
 // io.bind(engine);
 
 // console.log(io._parser);
@@ -41,7 +45,7 @@ app.use(cookieParser());
 // Database connection with better error handling
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || "mongodb+srv://ducduy2408:duy123123@healthcare.wj3pdm4.mongodb.net/?retryWrites=true&w=majority&appName=healthcare";
+    const mongoURI = process.env.MONGODB_URI || "mongodb+srv://ducduy2408:duy123123@healthcare.wj3pdm4.mongodb.net/healthcare?retryWrites=true&w=majority";
     console.log("Attempting to connect to MongoDB:", mongoURI);
 
     await mongoose.connect(mongoURI);
@@ -54,13 +58,47 @@ const connectDB = async () => {
 
 connectDB();
 
-// Routes
-app.use("/api/auth", authRoutes);
+/// Schema
+const heartRateSchema = new mongoose.Schema({
+  averagerate: Number,
+  bloodpresure: String,
+  maxrate: Number,
+  minrate: Number,
+  user: mongoose.Schema.Types.ObjectId
+}, { collection: 'heartrate' });
 
-// Basic route
-app.get("/api/healthcare/heartrate", (req, res) => {
-  res.json({ message: "Welcome to Health Care API" });
+// Model (nên để tên model số ít, Mongoose tự hiểu và map sang collection)
+const HeartRate = mongoose.model("HeartRate", heartRateSchema, "heartrate");
+
+// Route
+app.get("/api/healthcare/heartrate", async (req, res) => {
+  try {
+    console.log("📌 API /api/healthcare/heartrate called");
+    console.log("📌 Mongoose readyState:", mongoose.connection.readyState);
+    console.log("📌 DB Name:", mongoose.connection.name);
+
+    const rawData = await HeartRate.find().lean();
+    console.log("📌 rawData:", rawData);
+
+    const data = rawData.map(doc => ({
+      _id: doc._id.toString(),
+      averagerate: doc.averagerate,
+      bloodpresure: doc.bloodpresure,
+      maxrate: doc.maxrate,
+      minrate: doc.minrate,
+      user: doc.user ? doc.user.toString() : null
+    }));
+
+    res.status(200).json({ success: true, data });
+  } catch (err) {
+    console.error("❌ Error fetching heart rates:", err);
+    res.status(500).json({ success: false, error: "Failed to fetch heart rate data" });
+  }
 });
+
+
+
+
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -71,8 +109,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 // Start server
-server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(5050, '0.0.0.0', () => {
+  console.log(`✅ Server is running at http://192.168.1.6:5050/api/healthcare/heartrate`);
 });
 const io = require('socket.io')(server);
 io.on("connection", (socket: Socket) => {
